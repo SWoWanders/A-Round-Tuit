@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A Round Tuit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF4E9;
+    --mat:#EFE3CB;
+    --mat-edge:#E3D3AF;
+    --ink:#4B3B30;
+    --ink-soft:#8A7768;
+    --ink-faint:#B7A896;
+    --card-edge: rgba(75,59,48,0.14);
+    --shadow: rgba(75,59,48,0.22);
+    --surface:#FFFDF9;
+    --surface-edge: rgba(75,59,48,0.10);
+    --accent:#D97A5B;
+    --accent-ink:#FFFDF9;
+    --danger:#C15B4A;
+    --focus:#3B7A8A;
+    --font-display:'Fredoka', 'Baloo 2', ui-rounded, 'Segoe UI Rounded', sans-serif;
+    --font-body:'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#241E1A;
+      --mat:#2E2620;
+      --mat-edge:#3A3026;
+      --ink:#F1E6D8;
+      --ink-soft:#C9B9A8;
+      --ink-faint:#8A7768;
+      --card-edge: rgba(0,0,0,0.35);
+      --shadow: rgba(0,0,0,0.55);
+      --surface:#2C2521;
+      --surface-edge: rgba(255,255,255,0.08);
+      --accent:#E08A6B;
+      --accent-ink:#241E1A;
+      --danger:#E2887A;
+      --focus:#6FB6C6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#241E1A; --mat:#2E2620; --mat-edge:#3A3026; --ink:#F1E6D8; --ink-soft:#C9B9A8;
+    --ink-faint:#8A7768; --card-edge: rgba(0,0,0,0.35); --shadow: rgba(0,0,0,0.55);
+    --surface:#2C2521; --surface-edge: rgba(255,255,255,0.08); --accent:#E08A6B;
+    --accent-ink:#241E1A; --danger:#E2887A; --focus:#6FB6C6;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x:hidden;
+  }
+  button{font-family:inherit;}
+  button:focus-visible, [tabindex]:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  #app{
+    max-width:640px;
+    margin:0 auto;
+    min-height:100vh;
+    padding: max(18px, env(safe-area-inset-top)) 16px 40px;
+    position:relative;
+  }
+
+  .home-toolbar{ display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px; }
+
+  /* ---------- Header / wordmark ---------- */
+  .wordmark{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    margin: 4px 0 2px;
+  }
+  .wordmark h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size: clamp(28px, 7vw, 36px);
+    margin:0;
+    letter-spacing: 0.2px;
+  }
+  .wordmark .a{ color:var(--accent); }
+  .tagline{
+    font-size:14px; color:var(--ink-soft); margin: 0 0 20px; max-width: 46ch;
+  }
+
+  /* ---------- Home: shelf of trays ---------- */
+  .shelf{ display:flex; flex-direction:column; gap:14px; padding-bottom:76px; }
+
+  .tray{
+    background:var(--mat);
+    border:1px solid var(--mat-edge);
+    border-radius:22px;
+    padding:14px 16px;
+    display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+    text-align:left;
+    width:100%;
+    color:inherit;
+  }
+  .tray:hover{ transform: translateY(-1px); }
+  .tray:active{ transform: translateY(1px) scale(.995); }
+
+  .tray-peek{
+    position:relative;
+    width:56px; height:44px;
+    flex:0 0 auto;
+  }
+  .peek-dot{
+    position:absolute; width:38px; height:38px; border-radius:50%;
+    border:1.5px solid var(--card-edge);
+    box-shadow: 0 2px 4px var(--shadow);
+  }
+  .peek-dot.p2{ left:9px; top:2px; opacity:.85; }
+  .peek-dot.p3{ left:18px; top:0; }
+
+  .tray-body{ flex:1; min-width:0; }
+  .tray-name{
+    font-family:var(--font-display); font-weight:600; font-size:18px; margin:0 0 2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .tray-meta{ font-size:13px; color:var(--ink-soft); }
+  .tray-chevron{ color:var(--ink-faint); font-size:20px; flex:0 0 auto; }
+
+  .tray.add-tray{
+    background:transparent; border:2px dashed var(--mat-edge);
+    justify-content:center; color:var(--ink-soft);
+  }
+  .tray.add-tray .plus{ font-size:22px; font-family:var(--font-display); color:var(--accent); }
+
+  /* ---------- Category view ---------- */
+  .cat-header{
+    display:flex; align-items:center; gap:10px; margin-bottom: 6px;
+  }
+  .icon-btn{
+    background:var(--surface); border:1px solid var(--surface-edge);
+    width:40px; height:40px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; cursor:pointer; color:var(--ink); flex:0 0 auto;
+    box-shadow: 0 1px 2px var(--shadow);
+  }
+  .icon-btn:active{ transform: scale(.94); }
+  .cat-title{
+    font-family:var(--font-display); font-weight:600; font-size:22px; flex:1; min-width:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    background:none; border:none; color:inherit; text-align:left; padding:6px 4px; margin:0 -4px;
+    cursor:pointer; border-radius:10px;
+  }
+  .cat-title:active{ background: var(--surface-edge); }
+  .done-pill{
+    background:var(--surface); border:1px solid var(--surface-edge);
+    border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;
+    color:var(--ink-soft); cursor:pointer; white-space:nowrap;
+  }
+  .pill-btn-wide{ width:100%; margin-top:10px; text-align:center; }
+
+  .stack-mat{
+    background:var(--mat);
+    border:1px solid var(--mat-edge);
+    border-radius:28px;
+    margin-top:14px;
+    padding: 28px 16px 20px;
+    display:flex; flex-direction:column; align-items:center;
+    min-height: 360px;
+  }
+
+  .stack-count{
+    font-size:12px; color:var(--ink-soft); font-weight:700; margin-bottom:10px;
+    background:var(--surface); border:1px solid var(--surface-edge);
+    padding:4px 12px; border-radius:999px; text-align:center;
+  }
+
+  .stack-area{
+    position:relative;
+    width: min(78vw, 260px);
+    height: min(78vw, 260px);
+    margin: 6px 0 22px;
+    transition: width .32s ease, height .32s ease;
+  }
+  .stack-area.is-flipped{
+    width: min(92vw, 380px);
+    height: min(480px, 68vh);
+  }
+  .stack-area.is-flipped .card-behind{ display:none; }
+
+  .card-behind{
+    position:absolute; inset:0; border-radius:50%;
+    border:1.5px solid var(--card-edge);
+    box-shadow: 0 4px 10px var(--shadow);
+  }
+  .card-behind.b1{ transform: translate(4%, 5%) rotate(-6deg); }
+  .card-behind.b2{ transform: translate(-4%, 6%) rotate(5deg); }
+
+  .nav-arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--surface-edge);
+    background:var(--surface); color:var(--ink); font-size:20px; font-weight:800;
+    cursor:pointer; box-shadow:0 2px 6px var(--shadow); z-index:5;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nav-arrow.prev{ left:-14px; }
+  .nav-arrow.next{ right:-14px; }
+  .nav-arrow:disabled{ opacity:.32; cursor:default; }
+  .nav-arrow:active:not(:disabled){ transform:translateY(-50%) scale(.92); }
+
+  .card{
+    position:absolute; inset:0;
+    perspective: 1200px;
+    cursor:pointer;
+  }
+  .card-inner{
+    position:relative; width:100%; height:100%;
+    transition: transform .5s cubic-bezier(.4,.15,.2,1);
+    transform-style:preserve-3d;
+  }
+  .card.flipped .card-inner{ transform: rotateY(180deg); }
+  .card.leaving .card-inner{ transition: none; }
+
+  .card-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border: 2px solid var(--card-edge);
+    box-shadow: 0 8px 18px var(--shadow);
+    padding: 18px;
+    text-align:center;
+  }
+  .card-face.front{ border-radius:50%; }
+  .card-face.back{
+    transform: rotateY(180deg);
+    background:var(--surface);
+    justify-content:flex-start;
+    border-radius:28px;
+    padding: 20px 20px 18px;
+    overflow-x:hidden;
+    overflow-y:auto;
+    gap:10px;
+  }
+
+  .card-face.front .task-text{
+    font-family:var(--font-display); font-weight:600;
+    font-size: clamp(15px, 4.4vw, 19px);
+    line-height:1.25;
+    color: var(--card-ink, #4B3B30);
+    max-height: 72%;
+    overflow:hidden;
+    word-break: break-word;
+  }
+  .card-face.front .due-sub{
+    font-size:12px; font-weight:800; margin-top:8px; opacity:.85;
+  }
+  .card-face.front .flip-hint{
+    position:absolute; bottom:16px; right:18px; font-size:15px; opacity:.55;
+  }
+  .card-face.front .repeat-badge{
+    position:absolute; top:16px; left:18px; font-size:14px; opacity:.6;
+  }
+  .card-face.front .due-badge{
+    position:absolute; top:16px; right:18px; font-size:14px; opacity:.6;
+  }
+
+  .back-row{ width:100%; text-align:left; }
+  .back-label{ font-size:11px; font-weight:800; letter-spacing:.3px; color:var(--ink-soft); margin:0 0 4px; }
+  .back-textarea{
+    width:100%; border:1px solid var(--surface-edge); border-radius:12px;
+    font-family:var(--font-body); font-size:14px; padding:8px 10px; resize:none;
+    background:var(--paper); color:var(--ink);
+  }
+  .priority-row{ display:flex; align-items:center; gap:8px; }
+  .priority-row input[type=range]{ flex:1; accent-color:var(--accent); }
+  .priority-label{ font-size:12px; font-weight:700; color:var(--ink-soft); min-width:60px; text-align:right; }
+
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .toggle-text{ font-size:13px; color:var(--ink); line-height:1.3; }
+  .toggle-text small{ display:block; color:var(--ink-soft); font-weight:400; font-size:11px; }
+  .switch{
+    position:relative; width:44px; height:26px; border-radius:999px;
+    background:var(--ink-faint); flex:0 0 auto; cursor:pointer; border:none;
+  }
+  .switch.on{ background:var(--accent); }
+  .switch .knob{
+    position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
+    background:#fff; transition: transform .18s ease; box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  .switch.on .knob{ transform: translateX(18px); }
+
+  .cat-select{
+    width:100%; padding:8px 10px; border-radius:12px; border:1px solid var(--surface-edge);
+    background:var(--paper); color:var(--ink); font-family:inherit; font-size:14px;
+  }
+
+  .cat-chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .cat-chip{
+    border:1.5px solid var(--surface-edge); background:var(--paper); color:var(--ink);
+    border-radius:999px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;
+    font-family:inherit;
+  }
+  .cat-chip.selected{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+
+  .reminder-list{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .reminder-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--paper); border:1px solid var(--surface-edge); border-radius:999px;
+    padding:5px 6px 5px 12px; font-size:12px; font-weight:700; color:var(--ink);
+  }
+  .reminder-chip button{ border:none; background:none; color:var(--ink-soft); cursor:pointer; font-size:13px; line-height:1; padding:2px; }
+  .reminder-empty-note{ font-size:12px; color:var(--ink-soft); }
+  .reminder-add-row{ display:flex; gap:6px; align-items:center; }
+  .reminder-add-row input[type=number]{
+    width:56px; padding:8px 6px; border-radius:10px; border:1px solid var(--surface-edge);
+    background:var(--paper); color:var(--ink); font-family:inherit; font-size:13px;
+  }
+  .reminder-add-row select{
+    flex:1; padding:8px 6px; border-radius:10px; border:1px solid var(--surface-edge);
+    background:var(--paper); color:var(--ink); font-family:inherit; font-size:13px;
+  }
+  .reminder-add-row button{
+    border:none; background:var(--surface-edge); color:var(--ink); border-radius:10px;
+    padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap;
+  }
+
+  .back-actions{ display:flex; flex-wrap:wrap; gap:8px; width:100%; margin-top:auto; padding-top:4px; }
+  .mini-btn{
+    flex:1 1 30%; min-width:80px; border:none; border-radius:12px; padding:9px 8px; font-weight:700; font-size:12.5px;
+    cursor:pointer; font-family:inherit;
+  }
+  .mini-btn.flip-back{ background:var(--surface-edge); color:var(--ink); }
+  .mini-btn.delete{ background: color-mix(in srgb, var(--danger) 18%, transparent); color:var(--danger); }
+
+  /* ---------- Control row ---------- */
+  .controls{
+    display:flex; gap:8px; width:100%; max-width:420px;
+  }
+  .ctrl-btn{
+    flex:1; border:none; border-radius:18px; padding:12px 6px;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    font-family:var(--font-body); font-weight:800; font-size:11.5px;
+    cursor:pointer; box-shadow: 0 3px 0 var(--shadow);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .ctrl-btn:active{ transform: translateY(2px); box-shadow: 0 1px 0 var(--shadow); }
+  .ctrl-btn .glyph{ font-size:18px; }
+  .ctrl-btn.next{ background:var(--surface); color:var(--ink); border:1px solid var(--surface-edge); }
+  .ctrl-btn.shuffle{ background:var(--surface); color:var(--ink); border:1px solid var(--surface-edge); font-size:10.5px; }
+  .ctrl-btn.done{ background:var(--accent); color:var(--accent-ink); }
+  .ctrl-btn.flip{ background:var(--surface); color:var(--ink); border:1px solid var(--surface-edge); }
+
+  .empty-state{
+    text-align:center; color:var(--ink-soft); padding: 30px 10px;
+  }
+  .empty-state .big{ font-size:34px; margin-bottom:6px; }
+  .empty-state h3{ font-family:var(--font-display); color:var(--ink); margin:0 0 6px; font-size:18px; }
+  .empty-state p{ margin:0 0 16px; font-size:13.5px; max-width:32ch; margin-left:auto; margin-right:auto; }
+
+  .fab{
+    position:fixed; bottom: max(22px, env(safe-area-inset-bottom)); right: calc(50% - 320px + 22px);
+    width:58px; height:58px; border-radius:50%; border:none;
+    background:var(--accent); color:var(--accent-ink);
+    font-size:26px; font-family:var(--font-display);
+    box-shadow: 0 6px 14px var(--shadow);
+    cursor:pointer; z-index:40;
+  }
+  @media (max-width: 700px){
+    .fab{ right:22px; }
+  }
+  .fab:active{ transform: scale(.94); }
+
+  /* ---------- Modal / sheet ---------- */
+  .scrim{
+    position:fixed; inset:0; background:rgba(0,0,0,.38);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:100; opacity:0; pointer-events:none; transition: opacity .18s ease;
+  }
+  .scrim.show{ opacity:1; pointer-events:auto; }
+  .sheet{
+    background:var(--surface); width:100%; max-width:640px;
+    border-radius: 26px 26px 0 0;
+    padding: 18px 20px max(20px, env(safe-area-inset-bottom));
+    transform: translateY(20px);
+    transition: transform .2s ease;
+    max-height: 86vh; overflow-y:auto;
+  }
+  .scrim.show .sheet{ transform: translateY(0); }
+  .sheet h2{
+    font-family:var(--font-display); font-size:20px; margin:4px 0 16px;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; font-weight:800; color:var(--ink-soft); margin-bottom:6px; letter-spacing:.2px; }
+  .field input[type=text], .field input[type=datetime-local], .field textarea, .field select{
+    width:100%; border:1px solid var(--surface-edge); background:var(--paper); color:var(--ink);
+    border-radius:12px; padding:11px 12px; font-family:inherit; font-size:15px;
+  }
+  .field textarea{ resize:none; min-height:64px; }
+
+  .swatches{ display:flex; flex-wrap:wrap; gap:10px; }
+  .swatch{
+    width:34px; height:34px; border-radius:50%; border:2px solid transparent; cursor:pointer;
+  }
+  .swatch.selected{ border-color:var(--ink); }
+
+  .sheet-actions{ display:flex; gap:10px; margin-top:6px; }
+  .btn{
+    flex:1; border:none; border-radius:14px; padding:13px; font-weight:800; font-size:14.5px;
+    cursor:pointer; font-family:inherit;
+  }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn.ghost{ background:var(--surface-edge); color:var(--ink); }
+
+  .done-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .done-item{
+    display:flex; align-items:center; gap:10px; background:var(--paper); border:1px solid var(--surface-edge);
+    border-radius:14px; padding:10px 12px;
+  }
+  .done-dot{ width:14px; height:14px; border-radius:50%; flex:0 0 auto; }
+  .done-text{ flex:1; font-size:14px; }
+  .done-text .when{ display:block; font-size:11px; color:var(--ink-soft); }
+  .restore-btn{
+    border:none; background:var(--surface-edge); border-radius:10px; padding:6px 10px; font-size:12px;
+    font-weight:700; cursor:pointer; color:var(--ink);
+  }
+
+  /* ---------- Toast ---------- */
+  #toast-host{
+    position:fixed; top: max(14px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+    z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center;
+    pointer-events:none;
+  }
+  .toast{
+    background:var(--ink); color:var(--paper); font-size:13px; font-weight:700;
+    padding:9px 16px; border-radius:999px; box-shadow:0 4px 10px rgba(0,0,0,.25);
+    opacity:0; transform:translateY(-8px); transition: opacity .18s ease, transform .18s ease;
+    max-width:80vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .card-inner, .tray, .ctrl-btn, .sheet, .scrim{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="home-toolbar">
+    <button class="icon-btn" id="about-btn" aria-label="About this app">ℹ️</button>
+    <button class="icon-btn" id="export-btn" aria-label="Export your tuits to a text file">📤</button>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings">⚙️</button>
+  </div>
+  <div class="wordmark">
+    <h1><span class="a">A</span> Round Tuit</h1>
+  </div>
+  <p class="tagline">Everything you've been meaning to get to — one card at a time.</p>
+
+  <div id="view-home" class="shelf" role="list"></div>
+
+  <div id="view-category" style="display:none;">
+    <div class="cat-header">
+      <button class="icon-btn" id="back-btn" aria-label="Back to shelf">←</button>
+      <button class="cat-title" id="cat-title" aria-label="Edit this stack's name and colour"></button>
+      <button class="done-pill" id="done-pill-btn">Done · <span id="done-count">0</span></button>
+      <button class="icon-btn" id="add-tuit-btn" aria-label="Add a tuit to this stack">+</button>
+    </div>
+
+    <div id="calendar-export-row" style="display:none;">
+      <button class="done-pill pill-btn-wide" id="calendar-export-btn">📅 Add all to Calendar</button>
+    </div>
+
+    <div class="stack-mat">
+      <div class="stack-count" id="stack-count">0 tuits</div>
+      <div class="stack-area" id="stack-area"></div>
+      <div class="controls" id="controls" style="display:none;">
+        <button class="ctrl-btn flip" id="flip-btn"><span class="glyph">⟲</span>Flip</button>
+        <button class="ctrl-btn next" id="next-btn"><span class="glyph">→</span>Next Round Tuit</button>
+        <button class="ctrl-btn shuffle" id="shuffle-btn"><span class="glyph">🔀</span>Shuffle Stack</button>
+        <button class="ctrl-btn done" id="finish-btn"><span class="glyph">✓</span>Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="fab" aria-label="Add a tuit">+</button>
+
+<div id="toast-host" aria-live="polite"></div>
+
+<!-- Add/Edit Tuit sheet -->
+<div class="scrim" id="tuit-scrim">
+  <div class="sheet">
+    <h2 id="tuit-sheet-title">New tuit</h2>
+    <div class="field">
+      <label for="tuit-text">What needs doing?</label>
+      <textarea id="tuit-text" maxlength="140" placeholder="Water the plants"></textarea>
+    </div>
+    <div class="field">
+      <label>Which stacks?</label>
+      <div class="cat-chip-row" id="tuit-cats"></div>
+    </div>
+    <div class="field">
+      <label>How badly does it want your attention?</label>
+      <div class="priority-row">
+        <input type="range" id="tuit-priority" min="1" max="5" value="3" step="1">
+        <span class="priority-label" id="tuit-priority-label">Normal</span>
+      </div>
+    </div>
+    <div class="field toggle-row">
+      <span class="toggle-text">Keeps coming back<small>Stays in the stack after you finish it</small></span>
+      <button class="switch" id="tuit-repeat" role="switch" aria-checked="false"><span class="knob"></span></button>
+    </div>
+    <div class="field toggle-row">
+      <span class="toggle-text">Due date<small>Puts it in Time-Sensitive too</small></span>
+      <button class="switch" id="tuit-due-toggle" role="switch" aria-checked="false"><span class="knob"></span></button>
+    </div>
+    <div class="field" id="tuit-due-fields" style="display:none;">
+      <label for="tuit-due">Date &amp; time</label>
+      <input type="datetime-local" id="tuit-due">
+      <p class="back-label" style="margin-top:12px;">Remind me</p>
+      <div class="reminder-list" id="tuit-reminders"></div>
+      <div class="reminder-add-row">
+        <input type="number" min="1" max="999" value="1" id="tuit-reminder-amount">
+        <select id="tuit-reminder-unit"><option value="hours">hours before</option><option value="days">days before</option></select>
+        <button type="button" id="tuit-reminder-add">+ Add</button>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="tuit-cancel">Cancel</button>
+      <button class="btn primary" id="tuit-save">Add tuit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit category sheet -->
+<div class="scrim" id="cat-scrim">
+  <div class="sheet">
+    <h2 id="cat-sheet-title">New stack</h2>
+    <div class="field">
+      <label for="cat-name">Name it</label>
+      <input type="text" id="cat-name" maxlength="24" placeholder="Errands">
+    </div>
+    <div class="field">
+      <label>Pick a colour</label>
+      <div class="swatches" id="cat-swatches"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="cat-cancel">Cancel</button>
+      <button class="btn primary" id="cat-save">Create stack</button>
+    </div>
+    <button class="mini-btn delete" id="cat-delete" style="width:100%; margin-top:12px; display:none;">Delete this stack</button>
+  </div>
+</div>
+
+<!-- Done pile sheet -->
+<div class="scrim" id="done-scrim">
+  <div class="sheet">
+    <h2>Done</h2>
+    <div class="done-list" id="done-list"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="done-close">Close</button>
+      <button class="btn primary" id="done-empty">Empty this pile</button>
+    </div>
+  </div>
+</div>
+
+<!-- About sheet -->
+<div class="scrim" id="about-scrim">
+  <div class="sheet">
+    <h2>About A Round Tuit</h2>
+    <div class="about-body" style="font-size:13.5px; line-height:1.6; color:var(--ink);">
+      <p>You've been meaning to get a round tuit. Well, here's a whole deck of them. Each task, chore, or errand becomes a circular card — a "tuit" — that lives in one or more stacks.</p>
+
+      <p class="back-label" style="margin-top:14px;">STACKS &amp; TUITS</p>
+      <p>Stacks are your categories — Chores, Groceries, Shopping, Projects, and Fitness &amp; Health come built in, and you can add, rename, recolour, or delete any stack (tap its title while viewing it). A single tuit can belong to several stacks at once — check as many as you like when adding or editing one.</p>
+
+      <p class="back-label" style="margin-top:14px;">THE SHUFFLE</p>
+      <p>A stack's order stays put between visits — nothing reshuffles on its own. "Next Round Tuit" pages through the stack as it currently stands, without changing anything. "Shuffle Stack" redraws the whole stack's order at once, weighted by each tuit's priority: higher priority tends to land nearer the top, lower priority can land anywhere — but nothing is ever pinned in place, even after a shuffle. "Done" clears a one-and-done tuit for good, or cycles a repeating one back into the deck at a fresh, priority-weighted spot.</p>
+
+      <p class="back-label" style="margin-top:14px;">FLIP FOR SETTINGS</p>
+      <p>Tap a card to flip it. The back holds everything: edit the text, adjust priority, toggle "keeps coming back," change which stacks it belongs to, set a due date and reminders, or delete it.</p>
+
+      <p class="back-label" style="margin-top:14px;">TIME-SENSITIVE</p>
+      <p>Give any tuit a due date and it automatically appears in the Time-Sensitive stack too — no manual filing needed. That stack is sorted soonest-to-latest instead of shuffled, and ‹ › arrows let you browse through it in order.</p>
+
+      <p class="back-label" style="margin-top:14px;">REMINDERS</p>
+      <p>Any due tuit can carry one or more reminders (e.g. "1 day before" and "2 hours before"). With spoken reminders on (Settings), the app announces them out loud — but only while this tab is open. For reminders that work even when the app is closed, use "📅 Calendar" to export — your reminder times travel with it as real alarms in your phone's calendar app.</p>
+
+      <p class="back-label" style="margin-top:14px;">DONE PILE</p>
+      <p>Each stack's "Done" pill shows everything you've finished there. Restore anything back into its stack, or empty the whole pile.</p>
+
+      <p class="back-label" style="margin-top:14px;">EXPORT &amp; SOUND</p>
+      <p>The 📤 button turns any set of stacks into a downloadable .txt file, organized under headings with due dates included. Every action — flip, shuffle, complete, add, delete — has its own tactile sound effect.</p>
+
+      <p class="back-label" style="margin-top:14px;">YOUR DATA</p>
+      <p>Everything is stored locally in this browser. Nothing is sent anywhere, and there's no account — which also means clearing your browser data or switching devices will clear your tuits, so export to text or calendar if you want a backup.</p>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn primary" id="about-close">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="scrim" id="settings-scrim">
+  <div class="sheet">
+    <h2>Settings</h2>
+    <div class="field toggle-row">
+      <span class="toggle-text">Spoken reminders<small>Announces reminders out loud while this tab is open</small></span>
+      <button class="switch" id="settings-reminders-toggle" role="switch" aria-checked="true"><span class="knob"></span></button>
+    </div>
+    <div class="field">
+      <button class="btn ghost" id="settings-test-voice" style="width:100%;">🔊 Test voice</button>
+    </div>
+    <div class="field">
+      <label>Default reminders for new due dates</label>
+      <div class="reminder-list" id="settings-reminders"></div>
+      <div class="reminder-add-row">
+        <input type="number" min="1" max="999" value="1" id="settings-reminder-amount">
+        <select id="settings-reminder-unit"><option value="hours">hours before</option><option value="days">days before</option></select>
+        <button type="button" id="settings-reminder-add">+ Add</button>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--ink-soft); line-height:1.5; margin:4px 0 18px;">
+      Spoken reminders only fire while this app is open in your browser — they can't wake your phone or notify you if the tab's closed. For reminders that work even when the app isn't open, use "Add to Calendar" on a Time-Sensitive tuit — its reminder times go with it, and your phone's calendar app handles the actual alert.
+    </p>
+    <div class="sheet-actions">
+      <button class="btn primary" id="settings-close">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export sheet -->
+<div class="scrim" id="export-scrim">
+  <div class="sheet">
+    <h2>Export to text file</h2>
+    <div class="field">
+      <label>Which stacks?</label>
+      <div class="cat-chip-row" id="export-cats"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="export-cancel">Cancel</button>
+      <button class="btn primary" id="export-save">Download .txt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== Sound engine ===================== */
+  var audioCtx = null;
+  function ctx(){
+    if(!audioCtx){
+      try{
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }catch(e){ audioCtx = null; }
+    }
+    if(audioCtx && audioCtx.state === "suspended"){
+      audioCtx.resume().catch(function(){});
+    }
+    return audioCtx;
+  }
+
+  function noiseBuffer(ac, seconds){
+    var len = Math.max(1, Math.floor(ac.sampleRate * seconds));
+    var buf = ac.createBuffer(1, len, ac.sampleRate);
+    var data = buf.getChannelData(0);
+    for(var i=0;i<len;i++){ data[i] = Math.random()*2 - 1; }
+    return buf;
+  }
+
+  function playThock(){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var src = ac.createBufferSource();
+    src.buffer = noiseBuffer(ac, 0.08);
+    var filt = ac.createBiquadFilter();
+    filt.type = "lowpass";
+    filt.frequency.setValueAtTime(1400, t);
+    filt.frequency.exponentialRampToValueAtTime(180, t+0.09);
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.5, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.1);
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start(t); src.stop(t+0.12);
+  }
+
+  function playFlip(){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var src = ac.createBufferSource();
+    src.buffer = noiseBuffer(ac, 0.16);
+    var filt = ac.createBiquadFilter();
+    filt.type = "bandpass";
+    filt.frequency.setValueAtTime(900, t);
+    filt.frequency.linearRampToValueAtTime(300, t+0.14);
+    filt.Q.value = 0.8;
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.35, t+0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.18);
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start(t); src.stop(t+0.2);
+    setTimeout(playThock, 150);
+  }
+
+  function playSkip(){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var src = ac.createBufferSource();
+    src.buffer = noiseBuffer(ac, 0.22);
+    var filt = ac.createBiquadFilter();
+    filt.type = "bandpass";
+    filt.frequency.setValueAtTime(1600, t);
+    filt.frequency.exponentialRampToValueAtTime(260, t+0.2);
+    filt.Q.value = 1.1;
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.3, t+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.24);
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start(t); src.stop(t+0.26);
+    setTimeout(playThock, 190);
+  }
+
+  function playChime(freqs){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    freqs.forEach(function(f, i){
+      var osc = ac.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.value = f;
+      var gain = ac.createGain();
+      var start = t + i*0.09;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(0.22, start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start+0.4);
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.start(start); osc.stop(start+0.42);
+    });
+  }
+  function playComplete(){ playChime([523.25, 659.25, 784.0]); }
+  function playRestore(){ playChime([392.0, 523.25]); }
+
+  function playAdd(){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var osc = ac.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(320, t);
+    osc.frequency.exponentialRampToValueAtTime(640, t+0.09);
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.28, t+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.16);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(t); osc.stop(t+0.18);
+  }
+
+  function playDelete(){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var src = ac.createBufferSource();
+    src.buffer = noiseBuffer(ac, 0.28);
+    var filt = ac.createBiquadFilter();
+    filt.type = "lowpass";
+    filt.frequency.setValueAtTime(1200, t);
+    filt.frequency.exponentialRampToValueAtTime(90, t+0.26);
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.32, t+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.3);
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start(t); src.stop(t+0.32);
+  }
+
+  function playTap(){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var osc = ac.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = 720;
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.12, t+0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.07);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(t); osc.stop(t+0.08);
+  }
+
+  function playToggle(on){
+    var ac = ctx(); if(!ac) return;
+    var t = ac.currentTime;
+    var osc = ac.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(on ? 440 : 330, t);
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.2, t+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.12);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(t); osc.stop(t+0.13);
+  }
+
+  /* ===================== Storage ===================== */
+  var STORAGE_KEY = "roundTuit.v1";
+  var SWATCHES = ["#FFD3B6","#BFE3C7","#D8C8EE","#B7DCEA","#F6C9D6","#F5E3A8","#BFE8DE","#C7CFF0"];
+  var TIME_ID = "time-sensitive";
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function isSpecialTime(catId){ return catId === TIME_ID; }
+
+  function defaultState(){
+    return {
+      categories: [
+        {id:"chores", name:"Chores", color:"#FFD3B6", builtin:true},
+        {id:"groceries", name:"Groceries", color:"#BFE3C7", builtin:true},
+        {id:"shopping", name:"Shopping", color:"#D8C8EE", builtin:true},
+        {id:"projects", name:"Projects", color:"#B7DCEA", builtin:true},
+        {id:"fitness", name:"Fitness & Health", color:"#F6C9D6", builtin:true},
+        {id:TIME_ID, name:"Time-Sensitive", color:"#F4CB80", builtin:true, special:"time"}
+      ],
+      cardsById: {},
+      order: {},
+      doneCards: [],
+      settings: { remindersEnabled: true, defaultReminders: [{id:uid(), amount:1, unit:"days"}] },
+      firedReminders: {}
+    };
+  }
+
+  var state = null;
+
+  function ensureDefaultCategories(){
+    var ids = state.categories.map(function(c){ return c.id; });
+    if(ids.indexOf("fitness") === -1){
+      state.categories.push({id:"fitness", name:"Fitness & Health", color:"#F6C9D6", builtin:true});
+    }
+    if(ids.indexOf(TIME_ID) === -1){
+      state.categories.push({id:TIME_ID, name:"Time-Sensitive", color:"#F4CB80", builtin:true, special:"time"});
+    }
+  }
+
+  function migrate(){
+    // v1 -> v2: single categoryId per card -> categoryIds[] + due dates + per-category order lists
+    if(state.cards && Array.isArray(state.cards)){
+      var cardsById = {};
+      var order = {};
+      state.cards.forEach(function(c){
+        var catId = c.categoryId;
+        var card = {
+          id: c.id, text: c.text,
+          categoryIds: catId ? [catId] : [],
+          priority: c.priority || 3,
+          repeat: !!c.repeat,
+          dueDate: null,
+          reminders: []
+        };
+        cardsById[card.id] = card;
+        if(catId){
+          if(!order[catId]) order[catId] = [];
+          order[catId].push(card.id);
+        }
+      });
+      state.cardsById = cardsById;
+      state.order = order;
+      delete state.cards;
+    }
+    if(!state.cardsById) state.cardsById = {};
+    if(!state.order) state.order = {};
+    if(!state.doneCards) state.doneCards = [];
+    if(!state.settings) state.settings = { remindersEnabled: true, defaultReminders: [{id:uid(), amount:1, unit:"days"}] };
+    if(state.settings.remindersEnabled === undefined) state.settings.remindersEnabled = true;
+    if(!state.settings.defaultReminders) state.settings.defaultReminders = [];
+    if(!state.firedReminders) state.firedReminders = {};
+
+    Object.keys(state.cardsById).forEach(function(id){
+      var c = state.cardsById[id];
+      if(!c.reminders) c.reminders = [];
+    });
+    state.doneCards.forEach(function(d){
+      if(d.categoryId && !d.categoryIds){
+        d.categoryIds = [d.categoryId];
+        delete d.categoryId;
+      }
+      if(!d.categoryIds) d.categoryIds = [];
+      if(d.dueDate === undefined) d.dueDate = null;
+    });
+    ensureDefaultCategories();
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && parsed.categories && (parsed.cards || parsed.cardsById)){
+          state = parsed;
+          migrate();
+          return;
+        }
+      }
+    }catch(e){ /* fall through to default */ }
+    state = defaultState();
+    migrate();
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      showToast("Couldn't save — your browser storage might be full.");
+    }
+  }
+
+  /* ===================== Weighted shuffle ===================== */
+  // Priority 1 (low) -> power 1 -> lands anywhere in the stack, uniformly.
+  // Priority 5 (high) -> power 5 -> strongly biased toward the top.
+  function weightedInsertIndex(length, priority){
+    if(length <= 0) return 0;
+    var power = Math.max(1, Math.min(5, priority || 3));
+    var r = Math.pow(Math.random(), power);
+    var idx = Math.floor(r * (length + 1));
+    return Math.max(0, Math.min(length, idx));
+  }
+
+  // Reshuffles an entire stack at once (not just the top card). Each card gets a
+  // random score biased by its own priority using the same curve as weightedInsertIndex —
+  // priority 5 scores cluster near 0 (so it tends to land near the top after sorting),
+  // priority 1 scores are uniform (so it can land anywhere). Sorting by that score
+  // produces a fresh, priority-weighted ordering of the whole deck.
+  function shuffleCategory(catId){
+    var ids = (state.order[catId] || []).slice();
+    var scored = ids.map(function(id){
+      var card = state.cardsById[id];
+      var power = Math.max(1, Math.min(5, (card && card.priority) || 3));
+      return {id: id, score: Math.pow(Math.random(), power)};
+    });
+    scored.sort(function(a,b){ return a.score - b.score; });
+    state.order[catId] = scored.map(function(s){ return s.id; });
+  }
+
+  function categoryCards(catId){
+    if(isSpecialTime(catId)){
+      return Object.keys(state.cardsById).map(function(id){ return state.cardsById[id]; })
+        .filter(function(c){ return !!c.dueDate; });
+    }
+    return (state.order[catId] || []).map(function(id){ return state.cardsById[id]; }).filter(Boolean);
+  }
+
+  // returns an array of card ids, top of stack first
+  function stackOrder(catId){
+    if(isSpecialTime(catId)){
+      var cards = categoryCards(catId).slice();
+      cards.sort(function(a,b){ return a.dueDate - b.dueDate; });
+      return cards.map(function(c){ return c.id; });
+    }
+    return (state.order[catId] || []).slice();
+  }
+
+  function removeFromCategoryOrder(catId, cardId){
+    var arr = state.order[catId];
+    if(!arr) return;
+    var idx = arr.indexOf(cardId);
+    if(idx > -1) arr.splice(idx, 1);
+  }
+
+  function insertIntoCategoryOrder(catId, cardId, position){
+    if(!state.order[catId]) state.order[catId] = [];
+    var arr = state.order[catId];
+    var pos = Math.max(0, Math.min(arr.length, position));
+    arr.splice(pos, 0, cardId);
+  }
+
+  /* ===================== Due dates / reminders / calendar export ===================== */
+  function toDatetimeLocalValue(ts){
+    var d = new Date(ts);
+    function pad(n){ return (n<10?"0":"")+n; }
+    return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());
+  }
+  function fromDatetimeLocalValue(str){
+    if(!str) return null;
+    var d = new Date(str);
+    return isNaN(d.getTime()) ? null : d.getTime();
+  }
+  function formatDue(ts){
+    var d = new Date(ts);
+    var datePart = d.toLocaleDateString(undefined, {month:"short", day:"numeric"});
+    var timePart = d.toLocaleTimeString(undefined, {hour:"numeric", minute:"2-digit"});
+    return datePart + " · " + timePart;
+  }
+  function reminderMs(r){ return r.unit === "days" ? r.amount*24*60*60*1000 : r.amount*60*60*1000; }
+  function reminderLabel(r){ return r.amount + " " + r.unit + " before"; }
+
+  function renderReminderChips(container, reminders, onRemove){
+    if(!reminders || !reminders.length){
+      container.innerHTML = '<span class="reminder-empty-note">No reminders yet</span>';
+      return;
+    }
+    container.innerHTML = reminders.map(function(r,i){
+      return '<span class="reminder-chip">'+reminderLabel(r)+' <button type="button" data-idx="'+i+'">✕</button></span>';
+    }).join("");
+    Array.prototype.forEach.call(container.querySelectorAll("button"), function(btn){
+      btn.addEventListener("click", function(){ onRemove(parseInt(btn.getAttribute("data-idx"),10)); });
+    });
+  }
+
+  function toICSDate(ts){
+    var d = new Date(ts);
+    function pad(n){ return (n<10?"0":"")+n; }
+    return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+"T"+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+"Z";
+  }
+  function icsEscape(s){
+    return String(s).replace(/[\\;,]/g, function(m){ return "\\"+m; }).replace(/\n/g, "\\n");
+  }
+  function buildICS(events){
+    var lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//A Round Tuit//EN","CALSCALE:GREGORIAN"];
+    events.forEach(function(ev){
+      lines.push("BEGIN:VEVENT");
+      lines.push("UID:"+ev.id+"@a-round-tuit");
+      lines.push("DTSTAMP:"+toICSDate(Date.now()));
+      lines.push("DTSTART:"+toICSDate(ev.dueDate));
+      lines.push("DTEND:"+toICSDate(ev.dueDate + 30*60*1000));
+      lines.push("SUMMARY:"+icsEscape(ev.text));
+      (ev.reminders||[]).forEach(function(r){
+        var trig = r.unit === "days" ? ("-P"+r.amount+"D") : ("-PT"+r.amount+"H");
+        lines.push("BEGIN:VALARM");
+        lines.push("ACTION:DISPLAY");
+        lines.push("DESCRIPTION:"+icsEscape(ev.text));
+        lines.push("TRIGGER:"+trig);
+        lines.push("END:VALARM");
+      });
+      lines.push("END:VEVENT");
+    });
+    lines.push("END:VCALENDAR");
+    return lines.join("\r\n");
+  }
+  function downloadBlob(filename, content, mime){
+    var blob = new Blob([content], {type:mime});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+  }
+  function downloadICS(filename, content){ downloadBlob(filename, content, "text/calendar;charset=utf-8"); }
+  function downloadText(filename, content){ downloadBlob(filename, content, "text/plain;charset=utf-8"); }
+
+  function speakReminder(card){
+    var msg = "Reminder: " + card.text + " is due " + formatDue(card.dueDate) + ".";
+    try{
+      if("speechSynthesis" in window){
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+      }
+    }catch(e){ /* ignore — toast still shows */ }
+    showToast("🔔 " + card.text + " — due " + formatDue(card.dueDate));
+  }
+
+  function checkReminders(){
+    Object.keys(state.firedReminders).forEach(function(key){
+      var cardId = key.split(":")[0];
+      if(!state.cardsById[cardId]) delete state.firedReminders[key];
+    });
+    if(!state.settings.remindersEnabled){ save(); return; }
+
+    var now = Date.now();
+    var RECENT_WINDOW = 24*60*60*1000;
+    var changed = false;
+    Object.keys(state.cardsById).forEach(function(id){
+      var card = state.cardsById[id];
+      if(!card.dueDate || !card.reminders || !card.reminders.length) return;
+      card.reminders.forEach(function(r){
+        var key = id+":"+r.id+":"+card.dueDate;
+        if(state.firedReminders[key]) return;
+        var trig = card.dueDate - reminderMs(r);
+        if(trig <= now){
+          state.firedReminders[key] = true;
+          changed = true;
+          if(now - trig <= RECENT_WINDOW) speakReminder(card);
+        }
+      });
+    });
+    save();
+  }
+
+  /* ===================== Toast ===================== */
+  var toastHost = document.getElementById("toast-host");
+  function showToast(msg){
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    toastHost.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add("show"); });
+    setTimeout(function(){
+      el.classList.remove("show");
+      setTimeout(function(){ el.remove(); }, 220);
+    }, 2200);
+  }
+
+  /* ===================== Rendering: Home ===================== */
+  var homeView = document.getElementById("view-home");
+  var catView = document.getElementById("view-category");
+
+  function catById(id){
+    return state.categories.filter(function(c){ return c.id === id; })[0];
+  }
+
+  function readableInk(hex){
+    var c = hex.replace("#","");
+    var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    var lum = (0.299*r + 0.587*g + 0.114*b)/255;
+    return lum > 0.55 ? "#4B3B30" : "#FFFDF9";
+  }
+
+  function escapeHtml(s){
+    var d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function renderHome(){
+    homeView.innerHTML = "";
+    state.categories.forEach(function(cat){
+      var special = isSpecialTime(cat.id);
+      var count = categoryCards(cat.id).length;
+      var doneCount = special
+        ? state.doneCards.filter(function(d){ return !!d.dueDate; }).length
+        : state.doneCards.filter(function(d){ return d.categoryIds && d.categoryIds.indexOf(cat.id)!==-1; }).length;
+      var metaWord = special ? (count===1 ? "tuit due" : "tuits due") : ("tuit"+(count===1?"":"s"));
+      var tray = document.createElement("button");
+      tray.className = "tray";
+      tray.setAttribute("role","listitem");
+      tray.innerHTML =
+        '<div class="tray-peek">' +
+          '<div class="peek-dot p3" style="background:'+cat.color+'"></div>' +
+          '<div class="peek-dot p2" style="background:'+cat.color+'; opacity:.7"></div>' +
+          '<div class="peek-dot" style="left:0;top:4px;background:'+cat.color+'"></div>' +
+        '</div>' +
+        '<div class="tray-body">' +
+          '<p class="tray-name">'+escapeHtml(cat.name)+'</p>' +
+          '<p class="tray-meta">'+count+' '+metaWord+(doneCount ? " · "+doneCount+" done" : "")+'</p>' +
+        '</div>' +
+        '<span class="tray-chevron">›</span>';
+      tray.addEventListener("click", function(){
+        playTap();
+        openCategory(cat.id);
+      });
+      homeView.appendChild(tray);
+    });
+
+    var addTray = document.createElement("button");
+    addTray.className = "tray add-tray";
+    addTray.innerHTML = '<span class="plus">+</span>&nbsp; New stack';
+    addTray.addEventListener("click", function(){ playTap(); openCategorySheet(); });
+    homeView.appendChild(addTray);
+  }
+
+  /* ===================== Rendering: Category / stack ===================== */
+  var currentCatId = null;
+  var currentCardFlipped = false;
+  var browseIndex = 0;
+
+  var catTitleEl = document.getElementById("cat-title");
+  var doneCountEl = document.getElementById("done-count");
+  var stackCountEl = document.getElementById("stack-count");
+  var stackAreaEl = document.getElementById("stack-area");
+  var controlsEl = document.getElementById("controls");
+  var nextBtnEl = document.getElementById("next-btn");
+  var shuffleBtnEl = document.getElementById("shuffle-btn");
+  var calendarExportRow = document.getElementById("calendar-export-row");
+
+  var fabEl = document.getElementById("fab");
+
+  function openCategory(catId){
+    currentCatId = catId;
+    currentCardFlipped = false;
+    browseIndex = 0;
+    document.getElementById("view-home").style.display = "none";
+    catView.style.display = "block";
+    fabEl.style.display = "none";
+    renderCategory();
+  }
+
+  function goHome(){
+    catView.style.display = "none";
+    document.getElementById("view-home").style.display = "flex";
+    fabEl.style.display = "";
+    renderHome();
+  }
+
+  function currentTopCardId(){
+    var order = stackOrder(currentCatId);
+    if(order.length === 0) return null;
+    var idx = Math.max(0, Math.min(order.length-1, browseIndex));
+    return order[idx];
+  }
+
+  function renderCategory(){
+    var cat = catById(currentCatId);
+    if(!cat){ goHome(); return; }
+    var special = isSpecialTime(currentCatId);
+    catTitleEl.textContent = cat.name;
+
+    var doneCount = special
+      ? state.doneCards.filter(function(d){ return !!d.dueDate; }).length
+      : state.doneCards.filter(function(d){ return d.categoryIds && d.categoryIds.indexOf(currentCatId)!==-1; }).length;
+    doneCountEl.textContent = doneCount;
+
+    calendarExportRow.style.display = special ? "block" : "none";
+
+    var order = stackOrder(currentCatId);
+    var idx = Math.max(0, Math.min(order.length-1, browseIndex));
+    browseIndex = idx;
+
+    stackCountEl.textContent = order.length === 0
+      ? (special ? "0 tuits due" : "0 tuits in this stack")
+      : special
+        ? ((idx+1) + " of " + order.length + " · soonest first")
+        : ((idx+1) + " of " + order.length + " in this stack");
+
+    stackAreaEl.innerHTML = "";
+    stackAreaEl.classList.toggle("is-flipped", currentCardFlipped);
+
+    if(order.length === 0){
+      controlsEl.style.display = "none";
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.innerHTML = special
+        ? '<div class="big">🗓️</div><h3>Nothing due yet</h3><p>Add a due date to any tuit and it\'ll land here, soonest first.</p>'
+        : '<div class="big">🌀</div><h3>This stack is empty</h3><p>Add a tuit and it\'ll land right here, ready to shuffle.</p>';
+      stackAreaEl.style.display = "flex";
+      stackAreaEl.style.alignItems = "center";
+      stackAreaEl.style.justifyContent = "center";
+      stackAreaEl.appendChild(empty);
+      return;
+    }
+    stackAreaEl.style.display = "block";
+    controlsEl.style.display = "flex";
+    nextBtnEl.style.display = special ? "none" : "";
+    shuffleBtnEl.style.display = special ? "none" : "";
+
+    if(!currentCardFlipped){
+      if(special && order.length > 1){
+        var prevBtn = document.createElement("button");
+        prevBtn.className = "nav-arrow prev";
+        prevBtn.setAttribute("aria-label","Previous due");
+        prevBtn.innerHTML = "‹";
+        prevBtn.disabled = (idx === 0);
+        prevBtn.addEventListener("click", function(e){
+          e.stopPropagation();
+          if(browseIndex > 0){ browseIndex--; currentCardFlipped=false; playTap(); renderCategory(); }
+        });
+        stackAreaEl.appendChild(prevBtn);
+
+        var nextArrowBtn = document.createElement("button");
+        nextArrowBtn.className = "nav-arrow next";
+        nextArrowBtn.setAttribute("aria-label","Next due");
+        nextArrowBtn.innerHTML = "›";
+        nextArrowBtn.disabled = (idx === order.length-1);
+        nextArrowBtn.addEventListener("click", function(e){
+          e.stopPropagation();
+          var ord = stackOrder(currentCatId);
+          if(browseIndex < ord.length-1){ browseIndex++; currentCardFlipped=false; playTap(); renderCategory(); }
+        });
+        stackAreaEl.appendChild(nextArrowBtn);
+      } else if(order.length > 1){
+        var b2 = document.createElement("div");
+        b2.className = "card-behind b2";
+        b2.style.background = cat.color;
+        b2.setAttribute("aria-hidden","true");
+        stackAreaEl.appendChild(b2);
+        if(order.length > 2){
+          var b1 = document.createElement("div");
+          b1.className = "card-behind b1";
+          b1.style.background = cat.color;
+          b1.setAttribute("aria-hidden","true");
+          stackAreaEl.appendChild(b1);
+        }
+      }
+    }
+
+    var card = state.cardsById[order[idx]];
+    renderTopCard(card, cat);
+  }
+
+  var topCardEl = null;
+
+  function priorityWord(p){
+    return ({1:"Whenever", 2:"Someday soon", 3:"Normal", 4:"Soon", 5:"Now"})[p] || "Normal";
+  }
+
+  function renderTopCard(card, cat){
+    var special = isSpecialTime(currentCatId);
+    var wrap = document.createElement("div");
+    wrap.className = "card" + (currentCardFlipped ? " flipped" : "");
+    wrap.id = "top-card";
+    wrap.setAttribute("tabindex","0");
+    wrap.setAttribute("role","button");
+    wrap.setAttribute("aria-label", "Tuit card: " + card.text + ". Tap to flip.");
+
+    var ink = readableInk(cat.color);
+    var overdue = !!(card.dueDate && card.dueDate < Date.now());
+
+    var front = document.createElement("div");
+    front.className = "card-face front";
+    front.style.background = cat.color;
+    front.style.setProperty("--card-ink", ink);
+    front.innerHTML =
+      (card.repeat ? '<span class="repeat-badge" title="Repeats" style="color:'+ink+'">⟳</span>' : '') +
+      (card.dueDate ? '<span class="due-badge" title="Has a due date" style="color:'+ink+'">📅</span>' : '') +
+      '<div class="task-text" style="color:'+ink+'">'+escapeHtml(card.text)+'</div>' +
+      (special && card.dueDate ? '<div class="due-sub" style="color:'+ink+'">'+(overdue?"Overdue · ":"")+formatDue(card.dueDate)+'</div>' : '') +
+      '<span class="flip-hint" style="color:'+ink+'">⤾</span>';
+
+    var back = document.createElement("div");
+    back.className = "card-face back";
+    back.innerHTML = buildBackHTML(card);
+
+    var inner = document.createElement("div");
+    inner.className = "card-inner";
+    inner.appendChild(front);
+    inner.appendChild(back);
+    wrap.appendChild(inner);
+
+    wrap.addEventListener("click", function(e){
+      if(e.target.closest(".back-face-interactive")) return;
+      toggleFlip();
+    });
+    wrap.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggleFlip(); }
+    });
+
+    stackAreaEl.appendChild(wrap);
+    topCardEl = wrap;
+    wireBackControls(back, card);
+  }
+
+  function renderCatChips(container, selectedIds){
+    var normal = state.categories.filter(function(c){ return !isSpecialTime(c.id); });
+    container.innerHTML = normal.map(function(c){
+      return '<button type="button" class="cat-chip'+(selectedIds.indexOf(c.id)!==-1?" selected":"")+'" data-cat="'+c.id+'">'+escapeHtml(c.name)+'</button>';
+    }).join("");
+  }
+
+  function buildBackHTML(card){
+    return (
+      '<div class="back-row">' +
+        '<p class="back-label">Edit the tuit</p>' +
+        '<textarea class="back-textarea back-face-interactive" id="edit-text" rows="2" maxlength="140">'+escapeHtml(card.text)+'</textarea>' +
+      '</div>' +
+      '<div class="back-row">' +
+        '<p class="back-label">Priority · <span id="edit-priority-label">'+priorityWord(card.priority)+'</span></p>' +
+        '<div class="priority-row">' +
+          '<input class="back-face-interactive" type="range" id="edit-priority" min="1" max="5" step="1" value="'+card.priority+'">' +
+        '</div>' +
+      '</div>' +
+      '<div class="back-row toggle-row">' +
+        '<span class="toggle-text">Keeps coming back<small>Stays in the stack once you finish it</small></span>' +
+        '<button class="switch back-face-interactive'+(card.repeat?' on':'')+'" id="edit-repeat" role="switch" aria-checked="'+(card.repeat?"true":"false")+'"><span class="knob"></span></button>' +
+      '</div>' +
+      '<div class="back-row">' +
+        '<p class="back-label">Stacks</p>' +
+        '<div class="cat-chip-row back-face-interactive" id="edit-cats"></div>' +
+      '</div>' +
+      '<div class="back-row toggle-row">' +
+        '<span class="toggle-text">Due date<small>Also shows up in Time-Sensitive</small></span>' +
+        '<button class="switch back-face-interactive'+(card.dueDate?' on':'')+'" id="edit-due-toggle" role="switch" aria-checked="'+(card.dueDate?"true":"false")+'"><span class="knob"></span></button>' +
+      '</div>' +
+      '<div class="back-row" id="edit-due-wrap" style="display:'+(card.dueDate?'block':'none')+';">' +
+        '<input type="datetime-local" class="cat-select back-face-interactive" id="edit-due" value="'+(card.dueDate?toDatetimeLocalValue(card.dueDate):'')+'">' +
+        '<p class="back-label" style="margin-top:10px;">Remind me</p>' +
+        '<div class="reminder-list back-face-interactive" id="edit-reminders"></div>' +
+        '<div class="reminder-add-row back-face-interactive">' +
+          '<input type="number" min="1" max="999" value="1" id="edit-reminder-amount">' +
+          '<select id="edit-reminder-unit"><option value="hours">hours before</option><option value="days">days before</option></select>' +
+          '<button type="button" id="edit-reminder-add">+ Add</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="back-actions">' +
+        '<button class="mini-btn flip-back back-face-interactive" id="edit-flip-back">Flip back</button>' +
+        (card.dueDate ? '<button class="mini-btn flip-back back-face-interactive" id="edit-calendar">📅 Calendar</button>' : '') +
+        '<button class="mini-btn delete back-face-interactive" id="edit-delete">Delete</button>' +
+      '</div>'
+    );
+  }
+
+  function wireBackControls(back, card){
+    var textEl = back.querySelector("#edit-text");
+    var priEl = back.querySelector("#edit-priority");
+    var priLabel = back.querySelector("#edit-priority-label");
+    var repeatBtn = back.querySelector("#edit-repeat");
+    var catsContainer = back.querySelector("#edit-cats");
+    var dueToggleBtn = back.querySelector("#edit-due-toggle");
+    var dueWrap = back.querySelector("#edit-due-wrap");
+    var dueInput = back.querySelector("#edit-due");
+    var remindersListEl = back.querySelector("#edit-reminders");
+    var reminderAmountEl = back.querySelector("#edit-reminder-amount");
+    var reminderUnitEl = back.querySelector("#edit-reminder-unit");
+    var reminderAddBtn = back.querySelector("#edit-reminder-add");
+    var flipBackBtn = back.querySelector("#edit-flip-back");
+    var calBtn = back.querySelector("#edit-calendar");
+    var deleteBtn = back.querySelector("#edit-delete");
+
+    textEl.addEventListener("change", function(){
+      var v = textEl.value.trim();
+      if(v){ card.text = v; save(); }
+      else { textEl.value = card.text; }
+    });
+
+    priEl.addEventListener("input", function(){
+      priLabel.textContent = priorityWord(parseInt(priEl.value,10));
+    });
+    priEl.addEventListener("change", function(){
+      card.priority = parseInt(priEl.value,10);
+      save();
+    });
+
+    repeatBtn.addEventListener("click", function(){
+      card.repeat = !card.repeat;
+      repeatBtn.classList.toggle("on", card.repeat);
+      repeatBtn.setAttribute("aria-checked", card.repeat ? "true":"false");
+      playToggle(card.repeat);
+      save();
+    });
+
+    renderCatChips(catsContainer, card.categoryIds);
+    Array.prototype.forEach.call(catsContainer.querySelectorAll(".cat-chip"), function(chip){
+      chip.addEventListener("click", function(){
+        var cid = chip.getAttribute("data-cat");
+        var idx = card.categoryIds.indexOf(cid);
+        if(idx > -1){
+          if(card.categoryIds.length === 1 && !card.dueDate){
+            showToast("Needs at least one stack or a due date");
+            return;
+          }
+          card.categoryIds.splice(idx,1);
+          removeFromCategoryOrder(cid, card.id);
+        } else {
+          card.categoryIds.push(cid);
+          var len = (state.order[cid]||[]).length;
+          insertIntoCategoryOrder(cid, card.id, weightedInsertIndex(len, card.priority));
+        }
+        save();
+        playTap();
+        renderCategory();
+      });
+    });
+
+    function refreshReminderChips(){
+      if(!card.reminders) card.reminders = [];
+      renderReminderChips(remindersListEl, card.reminders, function(idx){
+        card.reminders.splice(idx,1);
+        save();
+        playTap();
+        refreshReminderChips();
+      });
+    }
+    refreshReminderChips();
+
+    reminderAddBtn.addEventListener("click", function(){
+      var amount = parseInt(reminderAmountEl.value,10);
+      if(!amount || amount<1) amount = 1;
+      var unit = reminderUnitEl.value;
+      if(!card.reminders) card.reminders = [];
+      card.reminders.push({id:uid(), amount:amount, unit:unit});
+      save();
+      playAdd();
+      refreshReminderChips();
+    });
+
+    dueToggleBtn.addEventListener("click", function(){
+      var turningOn = !dueToggleBtn.classList.contains("on");
+      if(!turningOn){
+        if(card.categoryIds.length === 0){
+          showToast("Needs at least one stack or a due date");
+          return;
+        }
+        card.dueDate = null;
+        save();
+        playToggle(false);
+        renderCategory();
+      } else {
+        dueWrap.style.display = "block";
+        dueToggleBtn.classList.add("on");
+        dueToggleBtn.setAttribute("aria-checked","true");
+        playToggle(true);
+        setTimeout(function(){ dueInput.focus(); }, 50);
+      }
+    });
+
+    dueInput.addEventListener("change", function(){
+      var ts = fromDatetimeLocalValue(dueInput.value);
+      if(ts){
+        card.dueDate = ts;
+        save();
+        showToast("Added to Time-Sensitive");
+        renderCategory();
+      }
+    });
+
+    flipBackBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      toggleFlip();
+    });
+
+    if(calBtn){
+      calBtn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var fname = "tuit-" + (card.text.replace(/[^a-z0-9]+/gi,"-").toLowerCase().slice(0,30) || "reminder") + ".ics";
+        downloadICS(fname, buildICS([{id:card.id, text:card.text, dueDate:card.dueDate, reminders:card.reminders||[]}]));
+        playAdd();
+        showToast("Calendar file downloaded");
+      });
+    }
+
+    deleteBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      card.categoryIds.forEach(function(cid){ removeFromCategoryOrder(cid, card.id); });
+      delete state.cardsById[card.id];
+      save();
+      playDelete();
+      showToast("Tuit deleted");
+      currentCardFlipped = false;
+      renderCategory();
+    });
+  }
+
+  function toggleFlip(){
+    currentCardFlipped = !currentCardFlipped;
+    playFlip();
+    if(topCardEl) topCardEl.classList.toggle("flipped", currentCardFlipped);
+    stackAreaEl.classList.toggle("is-flipped", currentCardFlipped);
+    if(currentCardFlipped){
+      Array.prototype.forEach.call(stackAreaEl.querySelectorAll(".nav-arrow"), function(el){ el.style.display = "none"; });
+    }
+  }
+
+  document.getElementById("add-tuit-btn").addEventListener("click", function(){
+    playTap();
+    openTuitSheet(currentCatId);
+  });
+
+  catTitleEl.addEventListener("click", function(){
+    playTap();
+    openCategorySheet(currentCatId);
+  });
+
+  /* ---- Next Round Tuit (browse without reshuffling) ---- */
+  nextBtnEl.addEventListener("click", function(){
+    if(isSpecialTime(currentCatId)) return;
+    var order = stackOrder(currentCatId);
+    if(order.length <= 1) return;
+    browseIndex = (browseIndex + 1) % order.length;
+    currentCardFlipped = false;
+    playTap();
+    renderCategory();
+  });
+
+  /* ---- Shuffle Stack (full reshuffle) ---- */
+  shuffleBtnEl.addEventListener("click", function(){
+    if(isSpecialTime(currentCatId)) return;
+    var order = stackOrder(currentCatId);
+    if(order.length === 0) return;
+    shuffleCategory(currentCatId);
+    browseIndex = 0;
+    save();
+    playSkip();
+    currentCardFlipped = false;
+    renderCategory();
+  });
+
+  /* ---- Done ---- */
+  document.getElementById("finish-btn").addEventListener("click", function(){
+    var cardId = currentTopCardId();
+    if(!cardId) return;
+    var card = state.cardsById[cardId];
+    var special = isSpecialTime(currentCatId);
+
+    if(card.repeat){
+      if(!special){
+        removeFromCategoryOrder(currentCatId, cardId);
+        var remaining = (state.order[currentCatId]||[]).length;
+        insertIntoCategoryOrder(currentCatId, cardId, weightedInsertIndex(remaining, card.priority));
+      }
+      showToast("Nice — back in the deck for next time");
+    } else {
+      card.categoryIds.forEach(function(cid){ removeFromCategoryOrder(cid, cardId); });
+      state.doneCards.unshift({
+        id: card.id, text: card.text, categoryIds: card.categoryIds.slice(),
+        priority: card.priority, repeat: card.repeat, dueDate: card.dueDate || null, doneAt: Date.now()
+      });
+      delete state.cardsById[cardId];
+      showToast("Done! 🎉");
+    }
+    save();
+    playComplete();
+    currentCardFlipped = false;
+    renderCategory();
+  });
+
+  document.getElementById("flip-btn").addEventListener("click", function(){
+    toggleFlip();
+  });
+
+  document.getElementById("back-btn").addEventListener("click", function(){
+    playTap();
+    goHome();
+  });
+
+  document.getElementById("calendar-export-btn").addEventListener("click", function(){
+    var cards = categoryCards(TIME_ID);
+    if(cards.length === 0){
+      showToast("Nothing due yet");
+      return;
+    }
+    var events = cards.map(function(c){ return {id:c.id, text:c.text, dueDate:c.dueDate, reminders:c.reminders||[]}; });
+    downloadICS("round-tuit-due-dates.ics", buildICS(events));
+    playAdd();
+    showToast("Calendar file downloaded — open it to add " + events.length + " event" + (events.length===1?"":"s"));
+  });
+
+  /* ===================== Add Tuit sheet ===================== */
+  var tuitScrim = document.getElementById("tuit-scrim");
+  var tuitTextEl = document.getElementById("tuit-text");
+  var tuitCatsEl = document.getElementById("tuit-cats");
+  var tuitPriorityEl = document.getElementById("tuit-priority");
+  var tuitPriorityLabel = document.getElementById("tuit-priority-label");
+  var tuitRepeatBtn = document.getElementById("tuit-repeat");
+  var tuitDueToggleBtn = document.getElementById("tuit-due-toggle");
+  var tuitDueWrap = document.getElementById("tuit-due-fields");
+  var tuitDueInput = document.getElementById("tuit-due");
+  var tuitRemindersListEl = document.getElementById("tuit-reminders");
+  var tuitReminderAmountEl = document.getElementById("tuit-reminder-amount");
+  var tuitReminderUnitEl = document.getElementById("tuit-reminder-unit");
+  var tuitRepeatOn = false;
+  var tuitDueOn = false;
+  var tuitSelectedCats = [];
+  var tuitReminders = [];
+
+  function refreshTuitReminders(){
+    renderReminderChips(tuitRemindersListEl, tuitReminders, function(idx){
+      tuitReminders.splice(idx,1);
+      playTap();
+      refreshTuitReminders();
+    });
+  }
+
+  function wireTuitChips(){
+    Array.prototype.forEach.call(tuitCatsEl.querySelectorAll(".cat-chip"), function(chip){
+      chip.addEventListener("click", function(){
+        var cid = chip.getAttribute("data-cat");
+        var idx = tuitSelectedCats.indexOf(cid);
+        if(idx > -1) tuitSelectedCats.splice(idx,1);
+        else tuitSelectedCats.push(cid);
+        chip.classList.toggle("selected");
+        playTap();
+      });
+    });
+  }
+
+  function openTuitSheet(catId){
+    tuitTextEl.value = "";
+    tuitPriorityEl.value = 3;
+    tuitPriorityLabel.textContent = "Normal";
+    tuitRepeatOn = false;
+    tuitRepeatBtn.classList.remove("on");
+    tuitRepeatBtn.setAttribute("aria-checked","false");
+
+    if(catId && isSpecialTime(catId)){
+      tuitSelectedCats = [];
+      tuitDueOn = true;
+      tuitReminders = (state.settings.defaultReminders||[]).map(function(r){ return {id:uid(), amount:r.amount, unit:r.unit}; });
+    } else {
+      tuitSelectedCats = catId ? [catId] : [];
+      tuitDueOn = false;
+      tuitReminders = [];
+    }
+    renderCatChips(tuitCatsEl, tuitSelectedCats);
+    wireTuitChips();
+    refreshTuitReminders();
+
+    tuitDueToggleBtn.classList.toggle("on", tuitDueOn);
+    tuitDueToggleBtn.setAttribute("aria-checked", tuitDueOn?"true":"false");
+    tuitDueWrap.style.display = tuitDueOn ? "block" : "none";
+    tuitDueInput.value = "";
+
+    tuitScrim.classList.add("show");
+    setTimeout(function(){ tuitTextEl.focus(); }, 80);
+  }
+  function closeTuitSheet(){ tuitScrim.classList.remove("show"); }
+
+  document.getElementById("fab").addEventListener("click", function(){
+    playTap();
+    openTuitSheet(null);
+  });
+  document.getElementById("tuit-cancel").addEventListener("click", function(){ playTap(); closeTuitSheet(); });
+  tuitScrim.addEventListener("click", function(e){ if(e.target === tuitScrim) closeTuitSheet(); });
+
+  tuitPriorityEl.addEventListener("input", function(){
+    tuitPriorityLabel.textContent = priorityWord(parseInt(tuitPriorityEl.value,10));
+  });
+  tuitRepeatBtn.addEventListener("click", function(){
+    tuitRepeatOn = !tuitRepeatOn;
+    tuitRepeatBtn.classList.toggle("on", tuitRepeatOn);
+    tuitRepeatBtn.setAttribute("aria-checked", tuitRepeatOn?"true":"false");
+    playToggle(tuitRepeatOn);
+  });
+  tuitDueToggleBtn.addEventListener("click", function(){
+    tuitDueOn = !tuitDueOn;
+    tuitDueToggleBtn.classList.toggle("on", tuitDueOn);
+    tuitDueToggleBtn.setAttribute("aria-checked", tuitDueOn?"true":"false");
+    tuitDueWrap.style.display = tuitDueOn ? "block" : "none";
+    playToggle(tuitDueOn);
+    if(tuitDueOn && tuitReminders.length === 0){
+      tuitReminders = (state.settings.defaultReminders||[]).map(function(r){ return {id:uid(), amount:r.amount, unit:r.unit}; });
+      refreshTuitReminders();
+    }
+  });
+  document.getElementById("tuit-reminder-add").addEventListener("click", function(){
+    var amount = parseInt(tuitReminderAmountEl.value,10);
+    if(!amount || amount<1) amount = 1;
+    var unit = tuitReminderUnitEl.value;
+    tuitReminders.push({id:uid(), amount:amount, unit:unit});
+    playAdd();
+    refreshTuitReminders();
+  });
+
+  document.getElementById("tuit-save").addEventListener("click", function(){
+    var text = tuitTextEl.value.trim();
+    if(!text){
+      showToast("Give the tuit a name first");
+      tuitTextEl.focus();
+      return;
+    }
+
+    var dueTs = null;
+    if(tuitDueOn){
+      dueTs = fromDatetimeLocalValue(tuitDueInput.value);
+      if(!dueTs){
+        showToast("Pick a date and time, or turn the due date off");
+        return;
+      }
+    }
+
+    if(tuitSelectedCats.length === 0 && !dueTs){
+      showToast("Choose a stack or add a due date");
+      return;
+    }
+
+    var priority = parseInt(tuitPriorityEl.value,10);
+    var id = uid();
+    var card = {
+      id:id, text:text, categoryIds:tuitSelectedCats.slice(), priority:priority, repeat:tuitRepeatOn,
+      dueDate:dueTs, reminders: dueTs ? tuitReminders.slice() : []
+    };
+    state.cardsById[id] = card;
+    tuitSelectedCats.forEach(function(cid){
+      var len = (state.order[cid]||[]).length;
+      insertIntoCategoryOrder(cid, id, weightedInsertIndex(len, priority));
+    });
+    save();
+    playAdd();
+    closeTuitSheet();
+
+    var labelBits = tuitSelectedCats.map(function(cid){ var c = catById(cid); return c ? c.name : ""; }).filter(Boolean);
+    if(dueTs) labelBits.push("Time-Sensitive");
+    showToast("Added to " + (labelBits.join(" & ") || "your tuits"));
+
+    if(catView.style.display !== "none"){
+      renderCategory();
+    } else {
+      renderHome();
+    }
+  });
+
+  /* ===================== Add / Edit Category sheet ===================== */
+  var catScrim = document.getElementById("cat-scrim");
+  var catNameEl = document.getElementById("cat-name");
+  var catSwatchesEl = document.getElementById("cat-swatches");
+  var catSheetTitleEl = document.getElementById("cat-sheet-title");
+  var catSaveBtn = document.getElementById("cat-save");
+  var catDeleteBtn = document.getElementById("cat-delete");
+  var selectedSwatch = SWATCHES[0];
+  var editingCatId = null;
+
+  function paintSwatches(){
+    catSwatchesEl.innerHTML = SWATCHES.map(function(sw){
+      return '<button class="swatch'+(sw===selectedSwatch?" selected":"")+'" style="background:'+sw+'" data-color="'+sw+'" aria-label="Colour '+sw+'"></button>';
+    }).join("");
+    Array.prototype.forEach.call(catSwatchesEl.querySelectorAll(".swatch"), function(btn){
+      btn.addEventListener("click", function(){
+        selectedSwatch = btn.getAttribute("data-color");
+        Array.prototype.forEach.call(catSwatchesEl.querySelectorAll(".swatch"), function(b){ b.classList.remove("selected"); });
+        btn.classList.add("selected");
+        playTap();
+      });
+    });
+  }
+
+  function openCategorySheet(catId){
+    editingCatId = catId || null;
+    var editing = catById(editingCatId);
+    if(editing){
+      catSheetTitleEl.textContent = "Edit stack";
+      catNameEl.value = editing.name;
+      selectedSwatch = editing.color;
+      catSaveBtn.textContent = "Save changes";
+      catDeleteBtn.style.display = isSpecialTime(editing.id) ? "none" : "block";
+    } else {
+      catSheetTitleEl.textContent = "New stack";
+      catNameEl.value = "";
+      selectedSwatch = SWATCHES[Math.floor(Math.random()*SWATCHES.length)];
+      catSaveBtn.textContent = "Create stack";
+      catDeleteBtn.style.display = "none";
+    }
+    paintSwatches();
+    catScrim.classList.add("show");
+    setTimeout(function(){ catNameEl.focus(); }, 80);
+  }
+  function closeCategorySheet(){ catScrim.classList.remove("show"); }
+
+  document.getElementById("cat-cancel").addEventListener("click", function(){ playTap(); closeCategorySheet(); });
+  catScrim.addEventListener("click", function(e){ if(e.target === catScrim) closeCategorySheet(); });
+
+  catSaveBtn.addEventListener("click", function(){
+    var name = catNameEl.value.trim();
+    if(!name){
+      showToast("Give the stack a name first");
+      catNameEl.focus();
+      return;
+    }
+    var editing = catById(editingCatId);
+    if(editing){
+      editing.name = name;
+      editing.color = selectedSwatch;
+      save();
+      playAdd();
+      closeCategorySheet();
+      showToast("Stack updated");
+      if(catView.style.display !== "none") renderCategory();
+      else renderHome();
+    } else {
+      var cat = {id: uid(), name: name, color: selectedSwatch, builtin:false};
+      state.categories.push(cat);
+      save();
+      playAdd();
+      closeCategorySheet();
+      showToast("Stack created");
+      renderHome();
+    }
+  });
+
+  catDeleteBtn.addEventListener("click", function(){
+    var editing = catById(editingCatId);
+    if(!editing || isSpecialTime(editing.id)) return;
+
+    var affectedIds = (state.order[editing.id] || []).slice();
+    var doneCount = state.doneCards.filter(function(d){ return d.categoryIds && d.categoryIds.indexOf(editing.id)!==-1; }).length;
+    var willDelete = 0, willUntag = 0;
+    affectedIds.forEach(function(id){
+      var c = state.cardsById[id];
+      if(!c) return;
+      var remaining = c.categoryIds.filter(function(cid){ return cid !== editing.id; });
+      if(remaining.length === 0 && !c.dueDate) willDelete++; else willUntag++;
+    });
+
+    var msg = 'Delete "' + editing.name + '" stack?';
+    var parts = [];
+    if(willDelete) parts.push(willDelete + " tuit" + (willDelete===1?"":"s") + " will be deleted");
+    if(willUntag) parts.push(willUntag + " tuit" + (willUntag===1?"":"s") + " will just lose this tag");
+    if(doneCount) parts.push(doneCount + " done item" + (doneCount===1?"":"s") + " in its history");
+    if(parts.length) msg += " " + parts.join(", ") + ".";
+    if(!window.confirm(msg)) return;
+
+    affectedIds.forEach(function(id){
+      var c = state.cardsById[id];
+      if(!c) return;
+      c.categoryIds = c.categoryIds.filter(function(cid){ return cid !== editing.id; });
+      if(c.categoryIds.length === 0 && !c.dueDate){
+        delete state.cardsById[id];
+      }
+    });
+    delete state.order[editing.id];
+    state.categories = state.categories.filter(function(c){ return c.id !== editing.id; });
+    save();
+    playDelete();
+    closeCategorySheet();
+    showToast("Stack deleted");
+    if(currentCatId === editing.id){
+      currentCatId = null;
+      goHome();
+    } else if(catView.style.display !== "none"){
+      renderCategory();
+    } else {
+      renderHome();
+    }
+  });
+
+  /* ===================== Done pile sheet ===================== */
+  var doneScrim = document.getElementById("done-scrim");
+  var doneListEl = document.getElementById("done-list");
+
+  function timeAgo(ts){
+    var s = Math.floor((Date.now()-ts)/1000);
+    if(s < 60) return "just now";
+    var m = Math.floor(s/60); if(m < 60) return m+"m ago";
+    var h = Math.floor(m/60); if(h < 24) return h+"h ago";
+    var d = Math.floor(h/24); return d+"d ago";
+  }
+
+  function openDonePile(){
+    var special = isSpecialTime(currentCatId);
+    var items = special
+      ? state.doneCards.filter(function(d){ return !!d.dueDate; })
+      : state.doneCards.filter(function(d){ return d.categoryIds && d.categoryIds.indexOf(currentCatId)!==-1; });
+
+    if(items.length === 0){
+      doneListEl.innerHTML = '<div class="empty-state" style="padding:10px 4px;"><p>Nothing finished yet in this stack.</p></div>';
+    } else {
+      var cat = catById(currentCatId);
+      doneListEl.innerHTML = items.map(function(d){
+        return '<div class="done-item" data-id="'+d.id+'">' +
+          '<span class="done-dot" style="background:'+ (cat?cat.color:"#ccc") +'"></span>' +
+          '<span class="done-text">'+escapeHtml(d.text)+'<span class="when">'+timeAgo(d.doneAt)+'</span></span>' +
+          '<button class="restore-btn" data-id="'+d.id+'">Restore</button>' +
+        '</div>';
+      }).join("");
+      Array.prototype.forEach.call(doneListEl.querySelectorAll(".restore-btn"), function(btn){
+        btn.addEventListener("click", function(){
+          var id = btn.getAttribute("data-id");
+          var idx = state.doneCards.findIndex(function(d){ return d.id===id; });
+          if(idx === -1) return;
+          var d = state.doneCards.splice(idx,1)[0];
+          var card = {
+            id: d.id, text: d.text, categoryIds: (d.categoryIds||[]).slice(),
+            priority: d.priority, repeat: d.repeat, dueDate: d.dueDate || null, reminders: []
+          };
+          state.cardsById[card.id] = card;
+          card.categoryIds.forEach(function(cid){
+            var len = (state.order[cid]||[]).length;
+            insertIntoCategoryOrder(cid, card.id, weightedInsertIndex(len, card.priority));
+          });
+          save();
+          playRestore();
+          showToast("Back in the stack");
+          openDonePile();
+          renderCategory();
+        });
+      });
+    }
+    doneScrim.classList.add("show");
+  }
+  function closeDonePile(){ doneScrim.classList.remove("show"); }
+
+  document.getElementById("done-pill-btn").addEventListener("click", function(){ playTap(); openDonePile(); });
+  document.getElementById("done-close").addEventListener("click", function(){ playTap(); closeDonePile(); });
+  doneScrim.addEventListener("click", function(e){ if(e.target === doneScrim) closeDonePile(); });
+
+  document.getElementById("done-empty").addEventListener("click", function(){
+    var before = state.doneCards.length;
+    if(isSpecialTime(currentCatId)){
+      state.doneCards = state.doneCards.filter(function(d){ return !d.dueDate; });
+    } else {
+      state.doneCards = state.doneCards.filter(function(d){ return !(d.categoryIds && d.categoryIds.indexOf(currentCatId)!==-1); });
+    }
+    if(before !== state.doneCards.length){
+      save();
+      playDelete();
+      showToast("Done pile emptied");
+      openDonePile();
+      renderCategory();
+    }
+  });
+
+  /* ===================== About sheet ===================== */
+  var aboutScrim = document.getElementById("about-scrim");
+  document.getElementById("about-btn").addEventListener("click", function(){
+    playTap();
+    aboutScrim.classList.add("show");
+  });
+  document.getElementById("about-close").addEventListener("click", function(){ playTap(); aboutScrim.classList.remove("show"); });
+  aboutScrim.addEventListener("click", function(e){ if(e.target === aboutScrim) aboutScrim.classList.remove("show"); });
+
+  /* ===================== Settings sheet ===================== */
+  var settingsScrim = document.getElementById("settings-scrim");
+  var settingsRemindersToggle = document.getElementById("settings-reminders-toggle");
+  var settingsRemindersList = document.getElementById("settings-reminders");
+  var settingsReminderAmountEl = document.getElementById("settings-reminder-amount");
+  var settingsReminderUnitEl = document.getElementById("settings-reminder-unit");
+
+  function refreshSettingsReminders(){
+    renderReminderChips(settingsRemindersList, state.settings.defaultReminders, function(idx){
+      state.settings.defaultReminders.splice(idx,1);
+      save();
+      playTap();
+      refreshSettingsReminders();
+    });
+  }
+
+  document.getElementById("settings-btn").addEventListener("click", function(){
+    playTap();
+    settingsRemindersToggle.classList.toggle("on", state.settings.remindersEnabled);
+    settingsRemindersToggle.setAttribute("aria-checked", state.settings.remindersEnabled?"true":"false");
+    refreshSettingsReminders();
+    settingsScrim.classList.add("show");
+  });
+  settingsScrim.addEventListener("click", function(e){ if(e.target === settingsScrim) settingsScrim.classList.remove("show"); });
+  document.getElementById("settings-close").addEventListener("click", function(){ playTap(); settingsScrim.classList.remove("show"); });
+
+  settingsRemindersToggle.addEventListener("click", function(){
+    state.settings.remindersEnabled = !state.settings.remindersEnabled;
+    settingsRemindersToggle.classList.toggle("on", state.settings.remindersEnabled);
+    settingsRemindersToggle.setAttribute("aria-checked", state.settings.remindersEnabled?"true":"false");
+    playToggle(state.settings.remindersEnabled);
+    save();
+  });
+
+  document.getElementById("settings-reminder-add").addEventListener("click", function(){
+    var amount = parseInt(settingsReminderAmountEl.value,10);
+    if(!amount || amount<1) amount = 1;
+    var unit = settingsReminderUnitEl.value;
+    state.settings.defaultReminders.push({id:uid(), amount:amount, unit:unit});
+    save();
+    playAdd();
+    refreshSettingsReminders();
+  });
+
+  document.getElementById("settings-test-voice").addEventListener("click", function(){
+    playTap();
+    try{
+      if("speechSynthesis" in window){
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance("This is a test reminder from A Round Tuit."));
+        showToast("Speaking now — if you didn't hear anything, check your volume.");
+      } else {
+        showToast("Spoken reminders aren't supported in this browser.");
+      }
+    }catch(e){
+      showToast("Couldn't play a test reminder.");
+    }
+  });
+
+  /* ===================== Export sheet ===================== */
+  var exportScrim = document.getElementById("export-scrim");
+  var exportCatsEl = document.getElementById("export-cats");
+  var exportSelectedCats = [];
+
+  function buildExportText(catIds){
+    var lines = ["A Round Tuit — exported " + new Date().toLocaleString()];
+    catIds.forEach(function(cid){
+      var cat = catById(cid);
+      if(!cat) return;
+      var special = isSpecialTime(cid);
+      var cards = categoryCards(cid);
+      if(special) cards = cards.slice().sort(function(a,b){ return a.dueDate - b.dueDate; });
+      lines.push("");
+      lines.push("== " + cat.name + " ==");
+      if(cards.length === 0){
+        lines.push("(nothing here)");
+      } else {
+        cards.forEach(function(c){
+          var line = "- " + c.text;
+          if(c.dueDate) line += "  (Due: " + formatDue(c.dueDate) + ")";
+          if(c.repeat) line += "  [repeats]";
+          lines.push(line);
+        });
+      }
+    });
+    return lines.join("\n");
+  }
+
+  document.getElementById("export-btn").addEventListener("click", function(){
+    playTap();
+    exportSelectedCats = state.categories.map(function(c){ return c.id; });
+    exportCatsEl.innerHTML = state.categories.map(function(c){
+      return '<button type="button" class="cat-chip selected" data-cat="'+c.id+'">'+escapeHtml(c.name)+'</button>';
+    }).join("");
+    Array.prototype.forEach.call(exportCatsEl.querySelectorAll(".cat-chip"), function(chip){
+      chip.addEventListener("click", function(){
+        var cid = chip.getAttribute("data-cat");
+        var idx = exportSelectedCats.indexOf(cid);
+        if(idx > -1) exportSelectedCats.splice(idx,1); else exportSelectedCats.push(cid);
+        chip.classList.toggle("selected");
+        playTap();
+      });
+    });
+    exportScrim.classList.add("show");
+  });
+  document.getElementById("export-cancel").addEventListener("click", function(){ playTap(); exportScrim.classList.remove("show"); });
+  exportScrim.addEventListener("click", function(e){ if(e.target === exportScrim) exportScrim.classList.remove("show"); });
+
+  document.getElementById("export-save").addEventListener("click", function(){
+    if(exportSelectedCats.length === 0){
+      showToast("Pick at least one stack");
+      return;
+    }
+    var text = buildExportText(exportSelectedCats);
+    downloadText("round-tuit-export.txt", text);
+    playAdd();
+    exportScrim.classList.remove("show");
+    showToast("Text file downloaded");
+  });
+
+  /* ===================== Init ===================== */
+  load();
+  renderHome();
+  checkReminders();
+  setInterval(checkReminders, 60000);
+})();
+</script>
+</body>
+</html>
