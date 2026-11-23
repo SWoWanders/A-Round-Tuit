@@ -1,0 +1,19 @@
+<script>
+/* Android app build only: route blob downloads (calendar .ics, text export) to the native side. */
+(function(){
+  var blobs = {}, make = URL.createObjectURL, click = HTMLAnchorElement.prototype.click;
+  URL.createObjectURL = function(o){ var u = make.call(URL, o); if (o instanceof Blob) blobs[u] = o; return u; };
+  HTMLAnchorElement.prototype.click = function(){
+    var b = blobs[this.href];
+    if (b && this.hasAttribute('download') && window.TuitNative) {
+      var name = this.getAttribute('download') || 'export', type = b.type || 'application/octet-stream';
+      var r = new FileReader();
+      r.onload = function(){ var s = String(r.result); window.TuitNative.openFile(name, type.split(';')[0], s.slice(s.indexOf(',') + 1)); };
+      r.onerror = function(){ alert('Sorry, that file could not be prepared.'); };
+      r.readAsDataURL(b);
+      return;
+    }
+    return click.call(this);
+  };
+})();
+</script>

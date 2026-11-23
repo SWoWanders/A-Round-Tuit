@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.swowanders.roundtuit",
+  "appName": "A Round Tuit",
+  "webDir": "www",
+  "backgroundColor": "#FBF4E9",
+  "android": {
+    "allowMixedContent": false
+  }
+}
